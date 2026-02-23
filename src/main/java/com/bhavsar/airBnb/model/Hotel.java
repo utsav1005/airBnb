@@ -28,7 +28,7 @@ public class Hotel {
     private String city;
 
     @OneToMany(mappedBy = "hotel", fetch = FetchType.LAZY)
-    private List<Room> roomId;
+    private List<Room> rooms;
 
     @Column(columnDefinition = "TEXT[]") //Image Url
     private String[] photos;
@@ -47,4 +47,7 @@ public class Hotel {
 
     @Column(nullable = false)
     private Boolean active;
+
+    @ManyToOne
+    private User owner;
 }

@@ -12,13 +12,13 @@ import java.time.LocalDateTime;
 @Entity
 @Getter
 @Setter
-@Table(name = "hotel" )
+@Table(name = "room" )
 public class Room {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "hotel_id",nullable = false)
     private Hotel hotel;
 
@@ -32,10 +32,13 @@ public class Room {
     private String[] photos;
 
     @Column(columnDefinition = "TEXT[]")
-    private String[] amenitites;
+    private String[] amenities;
 
     @Column(nullable = false)
     private Integer totalCount;
+
+    @Column(nullable = false)
+    private Integer capacity;
 
     @CreationTimestamp
     @Column(updatable = false)
