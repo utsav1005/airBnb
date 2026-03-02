@@ -8,6 +8,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/admin/hotels")
 @RequiredArgsConstructor
@@ -28,6 +30,12 @@ public class HotelAdminController {
         HotelDto hotelById = hotelService.getHotelById(id);
         return new ResponseEntity<>(hotelById,HttpStatus.ACCEPTED);
     }
+    @GetMapping
+    public ResponseEntity<List<HotelDto>> getAllHotel(){
+        List<HotelDto> hotelList = hotelService.getAllHotel();
+        return new ResponseEntity<>(hotelList,HttpStatus.ACCEPTED);
+    }
+
 
     @PutMapping("/{id}")
     public ResponseEntity<HotelDto> updateHotelById(@PathVariable Long id , @RequestBody HotelDto dto){
@@ -40,4 +48,11 @@ public class HotelAdminController {
         hotelService.deleteHotelById(id);
         return ResponseEntity.noContent().build();
     }
+
+    @PatchMapping("/{id}")
+    public ResponseEntity<Void> activateHotel(@PathVariable Long id){
+        hotelService.activeHotel(id);
+        return ResponseEntity.noContent().build();
+    }
+
 }

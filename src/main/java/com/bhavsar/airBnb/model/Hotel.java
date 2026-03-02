@@ -27,7 +27,7 @@ public class Hotel {
 
     private String city;
 
-    @OneToMany(mappedBy = "hotel", fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "hotel", fetch = FetchType.LAZY, cascade = CascadeType.REMOVE ,  orphanRemoval = true)
     private List<Room> rooms;
 
     @Column(columnDefinition = "TEXT[]") //Image Url
