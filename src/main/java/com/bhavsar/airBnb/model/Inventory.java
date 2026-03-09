@@ -41,7 +41,7 @@ public class Inventory {
     private Long bookedCount;
 
     @Column(nullable = false)
-    private Long reservedCount;
+    private Long reservedCount= 0L;
 
     @Column(nullable = false)
     private Integer totalCount;

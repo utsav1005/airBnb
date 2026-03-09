@@ -1,11 +1,12 @@
 package com.bhavsar.airBnb.model;
 
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
-
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -13,6 +14,8 @@ import java.time.LocalDateTime;
 @Entity
 @Getter
 @Setter
+@AllArgsConstructor
+@NoArgsConstructor
 public class HotelMinPrice {
         @Id
         @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -33,6 +36,11 @@ public class HotelMinPrice {
         @ManyToOne(fetch = FetchType.LAZY)
         @JoinColumn(name = "hotel_id",nullable = false)
         private Hotel hotel;
+
+        public HotelMinPrice(Hotel hotel , LocalDate  date) {
+                this.hotel = hotel;
+                this.date = date;
+        }
 }
 
 

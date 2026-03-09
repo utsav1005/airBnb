@@ -51,6 +51,7 @@ public class InventoryServiceImpl implements InventoryService {
                    .surgeFactor(BigDecimal.ONE)
                    .totalCount(room.getTotalCount())
                    .closed(false)
+                   .reservedCount(0L)
                    .build();
          inventories.add(inventory);
          currentDate = currentDate.plusDays(1);
@@ -67,17 +68,20 @@ public class InventoryServiceImpl implements InventoryService {
     @Override
     public Page<HotelPriceDto> searchHotels(HotelSearchRequest hotelSearchRequest) {
         log.info("Searching hotels in city {} from {} to {} for {} rooms",hotelSearchRequest.getCity(),
-                hotelSearchRequest.getStartDate(),hotelSearchRequest.getEndDate(),hotelSearchRequest.getRoomsCount());
+                hotelSearchRequest.getStartDate(),
+                hotelSearchRequest.getEndDate(),hotelSearchRequest.getRoomsCount());
 
         PageRequest pageRequest = PageRequest.of(hotelSearchRequest.getPage(), hotelSearchRequest.getSize());
-        long dateCount = ChronoUnit.DAYS.between(hotelSearchRequest.getStartDate() , hotelSearchRequest.getEndDate()) + 1;
+        long dateCount = ChronoUnit.DAYS.between(hotelSearchRequest.getStartDate() ,
+                hotelSearchRequest.getEndDate()) + 1;
+
 
         //business Logic 90 days
-        Page<HotelPriceDto> hotels  = hotelMinPriceRepository.findHotelWithAvailableInventory(hotelSearchRequest.getCity(),
+       return hotelMinPriceRepository.findHotelWithAvailableInventory(hotelSearchRequest.getCity(),
                 hotelSearchRequest.getStartDate(),
                 hotelSearchRequest.getEndDate(),
-                hotelSearchRequest.getRoomsCount() , dateCount, pageRequest);
+                 dateCount, pageRequest
+      );
 
-        return hotels.map((element) -> modelMapper.map(element , HotelPriceDto.class));
     }
 }
