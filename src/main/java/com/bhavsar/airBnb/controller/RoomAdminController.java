@@ -2,6 +2,7 @@ package com.bhavsar.airBnb.controller;
 
 import com.bhavsar.airBnb.dto.RoomDto;
 import com.bhavsar.airBnb.service.RoomService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -17,7 +18,7 @@ public class RoomAdminController {
     private final RoomService roomService;
 
     @PostMapping
-    public ResponseEntity<RoomDto> createNewRoom(@PathVariable Long hotelId, @RequestBody RoomDto roomDto){
+    public ResponseEntity<RoomDto> createNewRoom(@PathVariable Long hotelId, @Valid @RequestBody RoomDto roomDto){
         RoomDto newRoom = roomService.createNewRoom(hotelId, roomDto);
         return new ResponseEntity<>(newRoom, HttpStatus.CREATED);
     }
@@ -37,8 +38,5 @@ public class RoomAdminController {
         roomService.deleteRoomById(roomId);
         return ResponseEntity.noContent().build();
     }
-
-
-
 
 }

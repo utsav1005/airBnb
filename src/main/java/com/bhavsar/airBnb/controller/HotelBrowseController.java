@@ -8,6 +8,8 @@ import com.bhavsar.airBnb.service.HotelService;
 import com.bhavsar.airBnb.service.InventoryService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -19,8 +21,13 @@ public class HotelBrowseController {
     private final HotelService hotelService;
 
     @GetMapping("/search")
-    public ResponseEntity<Page<HotelPriceDto>> searchHotels(@RequestBody HotelSearchRequest hotelSearchRequest){
-       Page<HotelPriceDto> page =  inventoryService.searchHotels(hotelSearchRequest);
+    public ResponseEntity<Page<HotelPriceDto>> searchHotels(
+            @RequestParam(required = false) String city,
+            @RequestParam(required = false) String price,
+            @RequestParam(required = false) String name,
+            @PageableDefault(size = 10) Pageable pageable,
+            @RequestBody HotelSearchRequest hotelSearchRequest){
+       Page<HotelPriceDto> page =  inventoryService.searchHotels(pageable, hotelSearchRequest);
        return ResponseEntity.ok(page);
     }
     @GetMapping("/{hotelId}/info")

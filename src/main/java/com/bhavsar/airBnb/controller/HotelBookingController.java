@@ -4,6 +4,7 @@ import com.bhavsar.airBnb.dto.BookingDto;
 import com.bhavsar.airBnb.dto.BookingRequest;
 import com.bhavsar.airBnb.dto.GuestDto;
 import com.bhavsar.airBnb.service.BookingService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -21,7 +22,7 @@ public class HotelBookingController {
         return ResponseEntity.ok(bookingService.initializeBooking(bookingRequest));
     }
     @PostMapping("/{bookingId}/addGuests")
-    public ResponseEntity<BookingDto> addGuests(@PathVariable Long bookingId ,  @RequestBody List<GuestDto> guestDtoList){
+    public ResponseEntity<BookingDto> addGuests(@PathVariable Long bookingId ,  @Valid @RequestBody List<GuestDto> guestDtoList){
         return ResponseEntity.ok(bookingService.addGuests(bookingId , guestDtoList));
     }
  }

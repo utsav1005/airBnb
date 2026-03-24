@@ -5,6 +5,7 @@ import com.bhavsar.airBnb.dto.HotelPriceDto;
 import com.bhavsar.airBnb.dto.HotelSearchRequest;
 import com.bhavsar.airBnb.model.Room;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 import java.time.LocalDate;
 
@@ -14,5 +15,5 @@ public interface InventoryService {
     void deleteFutureInventories(Room room);
 
 
-    Page<HotelPriceDto> searchHotels(HotelSearchRequest hotelSearchRequest);
+    Page<HotelPriceDto> searchHotels(Pageable pageable ,  HotelSearchRequest hotelSearchRequest);
 }

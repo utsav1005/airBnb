@@ -2,10 +2,17 @@ package com.bhavsar.airBnb.controller;
 
 import com.bhavsar.airBnb.dto.HotelDto;
 import com.bhavsar.airBnb.service.HotelService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
+import org.springframework.data.web.SortDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -17,8 +24,9 @@ import java.util.List;
 public class HotelAdminController {
     private final HotelService hotelService;
 
+    @PreAuthorize("hasRole('HOTEL_MANAGER')")
     @PostMapping
-    public ResponseEntity<HotelDto> createNewHotel(@RequestBody HotelDto dto){
+    public ResponseEntity<HotelDto> createNewHotel(@Valid @RequestBody HotelDto dto){
         log.info("Attempting to create new Hotel{}",dto.getName());
         HotelDto hotel = hotelService.createHotel(dto);
         return new ResponseEntity<>(hotel,HttpStatus.CREATED);
@@ -30,15 +38,15 @@ public class HotelAdminController {
         HotelDto hotelById = hotelService.getHotelById(id);
         return new ResponseEntity<>(hotelById,HttpStatus.ACCEPTED);
     }
+
     @GetMapping
-    public ResponseEntity<List<HotelDto>> getAllHotel(){
-        List<HotelDto> hotelList = hotelService.getAllHotel();
+    public ResponseEntity<Page<HotelDto>> getAllHotel(@PageableDefault(size = 5 , sort = "name" , direction = Sort.Direction.ASC) Pageable pageable){
+        Page<HotelDto> hotelList = hotelService.findAllHotel(pageable);
         return new ResponseEntity<>(hotelList,HttpStatus.ACCEPTED);
     }
 
-
     @PutMapping("/{id}")
-    public ResponseEntity<HotelDto> updateHotelById(@PathVariable Long id , @RequestBody HotelDto dto){
+    public ResponseEntity<HotelDto> updateHotelById(@PathVariable Long id , @Valid @RequestBody HotelDto dto){
         HotelDto hotel = hotelService.updateHotelsById(id,dto);
         return new ResponseEntity<>(hotel,HttpStatus.OK);
     }
@@ -49,6 +57,7 @@ public class HotelAdminController {
         return ResponseEntity.noContent().build();
     }
 
+    @PreAuthorize("hasRole('HOTEL_MANAGER')")
     @PatchMapping("/{id}")
     public ResponseEntity<Void> activateHotel(@PathVariable Long id){
         hotelService.activeHotel(id);

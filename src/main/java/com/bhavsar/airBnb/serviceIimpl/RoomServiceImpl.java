@@ -4,6 +4,7 @@ import com.bhavsar.airBnb.dto.RoomDto;
 import com.bhavsar.airBnb.exception.ResourceNotFoundException;
 import com.bhavsar.airBnb.model.Hotel;
 import com.bhavsar.airBnb.model.Room;
+import com.bhavsar.airBnb.model.User;
 import com.bhavsar.airBnb.repository.HotelRepository;
 import com.bhavsar.airBnb.repository.InventoryRepository;
 import com.bhavsar.airBnb.repository.RoomRepository;
@@ -13,6 +14,7 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.util.Arrays;
@@ -35,6 +37,12 @@ public class RoomServiceImpl implements RoomService {
         log.info("Creating a new room with hotelId:{}",hotelId);
         Hotel hotel = hotelRepository.findById(hotelId)
                 .orElseThrow(()-> new ResourceNotFoundException("Hotel not found with id:"+hotelId));
+
+        User currentUser = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        if(!currentUser.equals(hotel.getOwner())){
+            throw new ResourceNotFoundException("This user does not own this hotel with id:"+hotelId);
+        }
+
         Room room = modelmapper.map(roomDto, Room.class);
         room.setHotel(hotel);
         room = roomRepository.save(room);
@@ -74,6 +82,11 @@ public class RoomServiceImpl implements RoomService {
         log.info("Deleting the room with id:{}",roomId);
         Room room = roomRepository.findById(roomId)
                 .orElseThrow(() -> new ResourceNotFoundException("Room not found with id:" + roomId));
+        User currentUser = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        if(!currentUser.equals(room.getHotel().getOwner())){
+            throw new ResourceNotFoundException("This user does not own this hotel with id:"+roomId);
+        }
+
         inventoryRepository.deleteByRoom(room); //delete all inventory
        roomRepository.delete(room);   //then remove parent
         // TODO : create a delete Inventory in future

@@ -6,6 +6,7 @@ import com.bhavsar.airBnb.dto.RoomDto;
 import com.bhavsar.airBnb.exception.ResourceNotFoundException;
 import com.bhavsar.airBnb.model.Hotel;
 import com.bhavsar.airBnb.model.Room;
+import com.bhavsar.airBnb.model.User;
 import com.bhavsar.airBnb.repository.HotelRepository;
 import com.bhavsar.airBnb.repository.RoomRepository;
 import com.bhavsar.airBnb.service.HotelService;
@@ -14,6 +15,9 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -33,6 +37,8 @@ public class HotelServiceImpl implements HotelService {
         log.info("Creating a new hotel with name {} ",hotelDto.getName());
         Hotel hotel = modelMapper.map(hotelDto, Hotel.class);
         hotel.setActive(false);
+        User currentUser = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        hotel.setOwner(currentUser);
         hotelRepository.save(hotel);
         log.info("Created a new Hotel with Id:{}",hotelDto.getId());
         return modelMapper.map(hotel , HotelDto.class);
@@ -43,15 +49,17 @@ public class HotelServiceImpl implements HotelService {
         log.info("Getting the hotel with id:{}",id);
         Hotel hotel = hotelRepository.findById(id)
                 .orElseThrow(()-> new ResourceNotFoundException("Hotel not found with id:"+id));
+        User currentUser = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        if(!currentUser.equals(hotel.getOwner())){
+            throw new ResourceNotFoundException("This user does not onw this hotel with id:"+id);
+        }
         return modelMapper.map(hotel , HotelDto.class);
     }
 
     @Override
-    public List<HotelDto> getAllHotel() {
-       return hotelRepository.findAll()
-               .stream()
-               .map(hotels-> modelMapper.map(hotels,HotelDto.class))
-               .toList();
+    public Page<HotelDto> findAllHotel(Pageable pageable) {
+        Page<Hotel> hotelPage = hotelRepository.findAll(pageable);
+        return hotelPage.map(hotel -> modelMapper.map(hotel, HotelDto.class));
     }
 
     @Override
@@ -59,6 +67,12 @@ public class HotelServiceImpl implements HotelService {
     public HotelDto updateHotelsById(Long id, HotelDto dto) {
         Hotel hotel = hotelRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Hotel id is not found with ID"+id));
+
+        User currentUser = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        if(!currentUser.equals(hotel.getOwner())){
+            throw new ResourceNotFoundException("This user does not onw this hotel with id:"+id);
+        }
+
         modelMapper.map(dto,hotel);
         hotel.setId(id);
         Hotel saveHotel = hotelRepository.save(hotel);
@@ -70,6 +84,10 @@ public class HotelServiceImpl implements HotelService {
     public void deleteHotelById(Long id) {
         Hotel hotel = hotelRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Hotel id is not found with ID"+id));
+        User currentUser = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        if(!hotel.getOwner().equals(currentUser)){
+            throw new ResourceNotFoundException("This user does not onw this hotel with id:"+id);
+        }
 
         //TODO: delete the future inventories for this hotel
         for(Room rooms: hotel.getRooms()){
@@ -86,6 +104,12 @@ public class HotelServiceImpl implements HotelService {
         log.info("Activating Hotel With id{}",id);
         Hotel hotel = hotelRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Hotel not found with id" + id));
+        User currentUser = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+
+        if(!hotel.getOwner().equals(currentUser)){
+            throw new ResourceNotFoundException("This user does not onw this hotel with id:"+id);
+        }
+
         hotel.setActive(true);
         hotelRepository.save(hotel);
         //TODO: Create Hotel Inventory for this activated Hotels
@@ -94,6 +118,7 @@ public class HotelServiceImpl implements HotelService {
         }
 
     }
+    //Public Method
     @Override
     public HotelInfoDto getHotelInfoById(Long hotelId) {
         Hotel hotel = hotelRepository.findById(hotelId)
