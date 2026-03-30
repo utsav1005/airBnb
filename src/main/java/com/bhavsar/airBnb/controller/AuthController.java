@@ -39,7 +39,9 @@ public class AuthController {
 
         Cookie cookie = new Cookie("refreshToken",tokens[1]);
         cookie.setHttpOnly(true); //Javascript cannot access this cookie
-
+        cookie.setMaxAge(60*60*24*7);  //7Days
+        cookie.setAttribute("SameSite" , "None");
+        cookie.setPath("/");
         httpServletResponse.addCookie(cookie);
         return ResponseEntity.ok(new LoginResponseDto(tokens[0]));
     }

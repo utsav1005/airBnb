@@ -36,8 +36,6 @@ public class BookingServiceImpl implements BookingService {
     private final BookingRepository bookingRepository;
     private final ModelMapper modelMapper;
 
-
-
     @Override
     @Transactional
     public BookingDto initializeBooking(BookingRequest bookingRequest) {

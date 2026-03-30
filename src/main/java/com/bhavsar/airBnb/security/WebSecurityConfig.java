@@ -84,19 +84,20 @@ public class WebSecurityConfig {
 
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
-        return request -> {
-            CorsConfiguration cors = new CorsConfiguration();
-            cors.setAllowedOrigins(Arrays.asList(
-                    "http://localhost:3000",
-                    "http://localhost:3003",
-                    "http://localhost:5173"
-            ));
-            cors.setAllowedMethods(List.of("GET","POST","PUT","DELETE","OPTIONS"));
-            cors.setAllowedHeaders(List.of("*"));
-            cors.setAllowCredentials(true);
-            cors.setExposedHeaders(List.of("Authorization"));
-            cors.setMaxAge(3600L);
-            return cors;
-        };
+        CorsConfiguration cors = new CorsConfiguration();
+        cors.setAllowedOrigins(Arrays.asList(
+                "http://localhost:3000",
+                "http://localhost:3003",
+                "http://localhost:5173"
+        ));
+        cors.setAllowedMethods(List.of("GET","POST","PUT","DELETE","OPTIONS"));
+        cors.setAllowedHeaders(List.of("*"));
+        cors.setAllowCredentials(true);
+        cors.setExposedHeaders(List.of("Authorization"));
+        cors.setMaxAge(3600L);
+
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", cors);
+        return source;
     }
 }

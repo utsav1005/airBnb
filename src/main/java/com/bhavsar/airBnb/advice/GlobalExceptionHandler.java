@@ -1,6 +1,7 @@
 package com.bhavsar.airBnb.advice;
 
 import com.bhavsar.airBnb.exception.ResourceNotFoundException;
+import com.bhavsar.airBnb.exception.SessionExpiredfException;
 import io.jsonwebtoken.JwtException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -20,6 +21,15 @@ public class GlobalExceptionHandler {
                 .message(ex.getMessage())
                 .build();
       return buildErrorResponseEntity(apiError);
+    }
+
+    @ExceptionHandler(SessionExpiredfException.class)
+    public ResponseEntity<ApiResponse<?>> handleSessionExpired(SessionExpiredfException ex){
+        ApiError apiError = ApiError.builder()
+                .status(HttpStatus.REQUEST_TIMEOUT)
+                .message(ex.getMessage())
+                .build();
+        return buildErrorResponseEntity(apiError);
     }
 
     @ExceptionHandler(Exception.class)
