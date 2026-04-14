@@ -13,5 +13,5 @@ public interface InventoryService {
     void deleteFutureInventories(Room room);
 
 
-    Page<HotelPriceDto> searchHotels(Pageable pageable ,  HotelSearchRequest hotelSearchRequest);
+    Page<HotelPriceDto> searchHotels(HotelSearchRequest hotelSearchRequest);
 }

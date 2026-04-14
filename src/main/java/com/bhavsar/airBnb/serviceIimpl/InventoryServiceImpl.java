@@ -24,6 +24,7 @@ import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -41,13 +42,17 @@ public class InventoryServiceImpl implements InventoryService {
         LocalDate endDate = today.plusYears(1); //1Year
         LocalDate currentDate = today;
         List<Inventory> inventories = new ArrayList<>();
+        List<HotelMinPrice> hotelMinPrices = new ArrayList<>();
        while(!currentDate.isAfter(endDate)){
+           // Capture current date as effectively final for lambda
+           LocalDate dateForIteration = currentDate;
+
            Inventory inventory = Inventory.builder()
                    .hotel(room.getHotel())
                    .room(room)
                    .bookedCount(0L)
                    .city(room.getHotel().getCity())
-                   .date(currentDate)
+                   .date(dateForIteration)
                    .price(room.getBasePrice())
                    .surgeFactor(BigDecimal.ONE)
                    .totalCount(room.getTotalCount())
@@ -55,10 +60,25 @@ public class InventoryServiceImpl implements InventoryService {
                    .reservedCount(0L)
                    .build();
          inventories.add(inventory);
+
+         // Create or update HotelMinPrice
+         HotelMinPrice hotelMinPrice = hotelMinPriceRepository
+                 .findByHotelAndDate(room.getHotel(), dateForIteration)
+                 .orElseGet(() -> new HotelMinPrice(room.getHotel(), dateForIteration));
+
+         // Update price if current room's price is lower or if not set
+         if (hotelMinPrice.getPrice() == null || room.getBasePrice().compareTo(hotelMinPrice.getPrice()) < 0) {
+             hotelMinPrice.setPrice(room.getBasePrice());
+         }
+         hotelMinPrices.add(hotelMinPrice);
+
          currentDate = currentDate.plusDays(1);
        }
         inventoryRepository.saveAll(inventories);
+        hotelMinPriceRepository.saveAll(hotelMinPrices);
+
     }
+
     @Override
     @Transactional
     public void deleteFutureInventories(Room room) {
@@ -67,22 +87,29 @@ public class InventoryServiceImpl implements InventoryService {
     }
 
     @Override
-    public Page<HotelPriceDto> searchHotels(Pageable pageable , HotelSearchRequest hotelSearchRequest) {
-        log.info("Searching hotels in city {} from {} to {} for {} rooms",hotelSearchRequest.getCity(),
-                hotelSearchRequest.getStartDate(),
-                hotelSearchRequest.getEndDate(),hotelSearchRequest.getRoomsCount());
-
-        PageRequest pageRequest = PageRequest.of(hotelSearchRequest.getPage(), hotelSearchRequest.getSize());
-        long dateCount = ChronoUnit.DAYS.between(hotelSearchRequest.getStartDate() ,
-                hotelSearchRequest.getEndDate()) + 1;
-
-
-        //business Logic 90 days
-       return hotelMinPriceRepository.findHotelWithAvailableInventory(hotelSearchRequest.getCity(),
+    public Page<HotelPriceDto> searchHotels(HotelSearchRequest hotelSearchRequest) {
+        log.info("Searching hotels in city {} from {} to {} for {} rooms",
+                hotelSearchRequest.getCity(),
                 hotelSearchRequest.getStartDate(),
                 hotelSearchRequest.getEndDate(),
-                 dateCount, pageRequest
-      );
+                hotelSearchRequest.getRoomsCount());
 
+        PageRequest pageRequest = PageRequest.of(
+                hotelSearchRequest.getPage(),
+                hotelSearchRequest.getSize()
+        );
+
+        long dateCount = ChronoUnit.DAYS.between(
+                hotelSearchRequest.getStartDate(),
+                hotelSearchRequest.getEndDate()
+        ) + 1;
+
+        return hotelMinPriceRepository.findHotelWithAvailableInventory(
+                hotelSearchRequest.getCity(),
+                hotelSearchRequest.getStartDate(),
+                hotelSearchRequest.getEndDate(),
+                dateCount,
+                pageRequest
+        );
     }
 }

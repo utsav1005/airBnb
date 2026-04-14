@@ -29,7 +29,6 @@ public class User implements UserDetails {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-
     @Size(min = 2, max = 50)
     private String name;
 

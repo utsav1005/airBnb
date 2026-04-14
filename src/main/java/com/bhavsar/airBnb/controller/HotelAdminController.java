@@ -21,7 +21,8 @@ import java.util.List;
 @RequestMapping("/admin/hotels")
 @RequiredArgsConstructor
 @Slf4j
-public class HotelAdminController {
+public class
+HotelAdminController {
     private final HotelService hotelService;
 
     @PreAuthorize("hasRole('HOTEL_MANAGER')")
@@ -32,6 +33,7 @@ public class HotelAdminController {
         return new ResponseEntity<>(hotel,HttpStatus.CREATED);
     }
 
+    @PreAuthorize("hasRole('HOTEL_MANAGER')")
     @GetMapping("/{id}")
     public ResponseEntity<HotelDto> getHotelById(@PathVariable Long id){
         log.info("Fetching hotel data with id:{}",id);
@@ -46,11 +48,13 @@ public class HotelAdminController {
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasRole('HOTEL_MANAGER')")
     public ResponseEntity<HotelDto> updateHotelById(@PathVariable Long id , @Valid @RequestBody HotelDto dto){
         HotelDto hotel = hotelService.updateHotelsById(id,dto);
         return new ResponseEntity<>(hotel,HttpStatus.OK);
     }
 
+    @PreAuthorize("hasRole('HOTEL_MANAGER')")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteHotelById(@PathVariable Long id ){
         hotelService.deleteHotelById(id);
@@ -59,7 +63,7 @@ public class HotelAdminController {
 
     @PreAuthorize("hasRole('HOTEL_MANAGER')")
     @PatchMapping("/{id}")
-    public ResponseEntity<Void> activateHotel(@PathVariable Long id){
+    public ResponseEntity<Void> activateHotel(@PathVariable Long id) {
         hotelService.activeHotel(id);
         return ResponseEntity.noContent().build();
     }

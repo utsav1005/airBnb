@@ -35,13 +35,23 @@ public class HotelServiceImpl implements HotelService {
     @Transactional
     public HotelDto createHotel(HotelDto hotelDto) {
         log.info("Creating a new hotel with name {} ",hotelDto.getName());
-        Hotel hotel = modelMapper.map(hotelDto, Hotel.class);
+        Hotel hotel = new Hotel();
+
+        // Map fields from DTO to Hotel entity
+        hotel.setName(hotelDto.getName());
+        hotel.setCity(hotelDto.getCity());
+        hotel.setPhotos(hotelDto.getPhotos());
+        hotel.setAmenities(hotelDto.getAmenities());
+        hotel.setContactInfo(hotelDto.getContactInfo());
         hotel.setActive(false);
+
+        // Set the current user as owner
         User currentUser = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         hotel.setOwner(currentUser);
-        hotelRepository.save(hotel);
-        log.info("Created a new Hotel with Id:{}",hotelDto.getId());
-        return modelMapper.map(hotel , HotelDto.class);
+
+        Hotel savedHotel = hotelRepository.save(hotel);
+        log.info("Created a new Hotel with Id:{}",savedHotel.getId());
+        return modelMapper.map(savedHotel , HotelDto.class);
     }
 
     @Override
@@ -50,8 +60,8 @@ public class HotelServiceImpl implements HotelService {
         Hotel hotel = hotelRepository.findById(id)
                 .orElseThrow(()-> new ResourceNotFoundException("Hotel not found with id:"+id));
         User currentUser = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        if(!currentUser.equals(hotel.getOwner())){
-            throw new ResourceNotFoundException("This user does not onw this hotel with id:"+id);
+        if(hotel.getOwner() == null || !currentUser.equals(hotel.getOwner())){
+            throw new ResourceNotFoundException("This user does not own this hotel with id:"+id);
         }
         return modelMapper.map(hotel , HotelDto.class);
     }
@@ -69,14 +79,22 @@ public class HotelServiceImpl implements HotelService {
                 .orElseThrow(() -> new ResourceNotFoundException("Hotel id is not found with ID"+id));
 
         User currentUser = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        if(!currentUser.equals(hotel.getOwner())){
-            throw new ResourceNotFoundException("This user does not onw this hotel with id:"+id);
+        // Only owner can update their hotel
+        if(hotel.getOwner() == null || !hotel.getOwner().equals(currentUser)){
+            throw new ResourceNotFoundException("This user does not own this hotel with id:"+id);
         }
 
-        modelMapper.map(dto,hotel);
-        hotel.setId(id);
+        // Update only the allowed fields from DTO, preserve owner and id
+        hotel.setName(dto.getName());
+        hotel.setCity(dto.getCity());
+        hotel.setPhotos(dto.getPhotos());
+        hotel.setAmenities(dto.getAmenities());
+        hotel.setContactInfo(dto.getContactInfo());
+        // Note: Do not update 'active' status through this endpoint
+        // Note: Owner is never updated
+
         Hotel saveHotel = hotelRepository.save(hotel);
-        return modelMapper.map(saveHotel,HotelDto.class);
+        return modelMapper.map(saveHotel, HotelDto.class);
     }
 
     @Override
@@ -85,8 +103,8 @@ public class HotelServiceImpl implements HotelService {
         Hotel hotel = hotelRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Hotel id is not found with ID"+id));
         User currentUser = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        if(!hotel.getOwner().equals(currentUser)){
-            throw new ResourceNotFoundException("This user does not onw this hotel with id:"+id);
+        if(hotel.getOwner() == null || !hotel.getOwner().equals(currentUser)){
+            throw new ResourceNotFoundException("This user does not own this hotel with id:"+id);
         }
 
         //TODO: delete the future inventories for this hotel
@@ -106,16 +124,27 @@ public class HotelServiceImpl implements HotelService {
                 .orElseThrow(() -> new ResourceNotFoundException("Hotel not found with id" + id));
         User currentUser = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
 
-        if(!hotel.getOwner().equals(currentUser)){
-            throw new ResourceNotFoundException("This user does not onw this hotel with id:"+id);
+        if(hotel.getOwner() == null || !hotel.getOwner().equals(currentUser)){
+            throw new ResourceNotFoundException("This user does not own this hotel with id:"+id);
         }
 
         hotel.setActive(true);
         hotelRepository.save(hotel);
-        //TODO: Create Hotel Inventory for this activated Hotels
-        for(Room rooms: hotel.getRooms()){
-            inventoryService.initializeRoomForAYear(rooms);
+
+        // ✅ Fetch rooms explicitly
+        List<Room> rooms = roomRepository.findByHotel(hotel);
+        log.info("Found {} rooms for hotel {}", rooms.size(), hotel.getId());
+
+        if (rooms.isEmpty()) {
+            log.warn("No rooms found for hotel {}. Add rooms first!", hotel.getId());
+            return;
         }
+        //TODO: Create Hotel Inventory for this activated Hotels
+        for(Room room: hotel.getRooms()){
+            inventoryService.initializeRoomForAYear(room);
+        }
+
+        log.info("Inventory initialized for hotel {}", hotel.getId());
 
     }
     //Public Method

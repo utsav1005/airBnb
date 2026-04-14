@@ -29,6 +29,7 @@ public class Hotel {
     private String city;
 
     @OneToMany(mappedBy = "hotel", fetch = FetchType.LAZY, cascade = CascadeType.REMOVE ,  orphanRemoval = true)
+    @JsonIgnore
     private List<Room> rooms;
 
     @Column(columnDefinition = "TEXT[]") //Image Url
@@ -49,6 +50,6 @@ public class Hotel {
     @Column(nullable = false)
     private Boolean active;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.EAGER)
     private User owner;
 }

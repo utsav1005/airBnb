@@ -91,7 +91,6 @@ public class PricingUpdateService {
         inventoryList.forEach(inventory -> {
             BigDecimal dynamicPrice = pricingService.calculateDynamicPrice(inventory);
             inventory.setPrice(dynamicPrice);
-
         });
         inventoryRepository.saveAll(inventoryList);
     }
