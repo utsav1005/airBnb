@@ -1,6 +1,7 @@
 package com.bhavsar.airBnb.model;
 
 import com.bhavsar.airBnb.model.enums.BookingStatus;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -66,5 +67,11 @@ public class Booking {
 
     @Column(nullable = false,precision = 10,scale = 2)
     private BigDecimal amount;
+
+    @Column(unique = true)
+    private String paymentSessionId;
+
+
+
 
 }
