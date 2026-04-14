@@ -1,6 +1,7 @@
 package com.bhavsar.airBnb.model;
 
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -8,18 +9,20 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Entity
 @Getter
 @Setter
-@Table(name = "hotel" )
+@Table(name = "room" )
 public class Room {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "hotel_id",nullable = false)
+    @JsonIgnore
     private Hotel hotel;
 
     @Column(nullable = false)
@@ -32,10 +35,16 @@ public class Room {
     private String[] photos;
 
     @Column(columnDefinition = "TEXT[]")
-    private String[] amenitites;
+    private String[] amenities;
 
     @Column(nullable = false)
     private Integer totalCount;
+
+    @Column(nullable = false)
+    private Integer capacity;
+
+    @OneToMany(mappedBy = "room" , cascade = CascadeType.ALL,orphanRemoval = true)
+    private List<Inventory> inventories;
 
     @CreationTimestamp
     @Column(updatable = false)
